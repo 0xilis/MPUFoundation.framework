@@ -25,11 +25,72 @@
   [self _tearDownMarqueeAnimation];
  }
 }
+-(void)invalidateIntrinsicContentSize {
+ [super invalidateIntrinsicContentSize];
+ UIView *viewForContentSize = self->_viewForContentSize;
+ if (viewForContentSize) {
+  CGSize size = [viewForContentSize intrinsicContentSize];
+  [self setContentSize:size];
+ }
+}
+-(CGSize)intrinsicContentSize {
+ UIView *viewForContentSize = self->_viewForContentSize;
+ if (viewForContentSize) {
+  return [viewForContentSize intrinsicContentSize];
+ }
+ return _contentSize;
+}
 -(id)viewForFirstBaselineLayout {
  return [[[self->_contentView subviews]firstObject]viewForFirstBaselineLayout];
 }
 -(id)viewForLastBaselineLayout {
  return [[[self->_contentView subviews]lastObject]viewForLastBaselineLayout];
+}
+-(void)setContentGap:(double)contentGap {
+ if (_contentGap != contentGap) {
+  _contentGap = contentGap;
+  [self _tearDownMarqueeAnimation];
+  [self _createMarqueeAnimationIfNeeded];
+  [self setNeedsLayout];
+ }
+}
+-(void)setMarqueeDelay:(double)delay {
+ if (_marqueeDelay != delay) {
+  _marqueeDelay = delay;
+  [self _createMarqueeAnimationIfNeeded];
+ }
+}
+-(void)setAnimationReferenceView:(UIView *)animationReferenceView {
+ if (self->_animationReferenceView != animationReferenceView) {
+  self->_animationReferenceView = animationReferenceView;
+  [self _createMarqueeAnimationIfNeeded];
+ }
+}
+-(void)setMarqueeEnabled:(bool)marqueeEnabled {
+ [self setMarqueeEnabled:marqueeEnabled withOptions:nil];
+}
+-(void)setMarqueeScrollRate:(double)rate {
+ if (_marqueeScrollRate != rate) {
+  _marqueeScrollRate = rate;
+  [self _tearDownMarqueeAnimation];
+  [self _createMarqueeAnimationIfNeeded];
+ }
+}
+-(void)setViewForContentSize:(UIView *)view {
+ if (_viewForContentSize != view) {
+  _viewForContentSize = view;
+  [self invalidateIntrinsicContentSize];
+ }
+}
+-(void)setAnimationDirection:(long long)animationDirection {
+ if (_animationDirection != animationDirection) {
+  _animationDirection = animationDirection;
+  [self setNeedsLayout];
+ }
+}
+-(id)coordinatedMarqueeViews {
+ [_coordinatedMarqueeViews compact];
+ return [_coordinatedMarqueeViews allObjects];
 }
 -(void)resetMarqueePosition {
  [self _tearDownMarqueeAnimation];
@@ -39,3 +100,20 @@
  [[self->_contentView layer]removeAnimationForKey:@"_MPUMarqueeViewLayerAnimationKey"];
 }
 @end
+
+/*
+ * Not yet implemented:
+ * layoutSubviews
+ * setBounds
+ * setFrame
+ * animationDidStop:finished:
+ * setContentSize:
+ * setMarqueeEnabled:withOptions:
+ * addCoordinatedMarqueeView:
+ * _applyMarqueeFade
+ * _createMarqueeAnimationIfNeeded
+ * _createMarqueeAnimationIfNeededWithMaximumDuration:beginTime:
+ * _duration
+ * sceneDidEnterBackgroundNotification
+ * sceneWillEnterForegroundNotification
+*/
