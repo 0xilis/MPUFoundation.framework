@@ -46,6 +46,19 @@
 -(id)viewForLastBaselineLayout {
  return [[[self->_contentView subviews]lastObject]viewForLastBaselineLayout];
 }
+-(void)animationDidStop:(id)animation finished:(BOOL)finished {
+ if ([[animation valueForKey:@"_MPUMarqueeViewAnimationIdentifierKey"] isEqual:_currentAnimationID]) {
+  [self _tearDownMarqueeAnimation];
+  id delegate = self->_delegate;
+  if ([delegate respondsToSelector:@selector(marqueeViewDidEndMarqueeIteration:finished:)]) {
+   [delegate marqueeViewDidEndMarqueeIteration:self finished:finished];
+  }
+  if (finished) {
+   /* does something with the _options ivar, but i dont know what... */
+   [self _createMarqueeAnimationIfNeeded];
+  }
+ }
+}
 -(void)setContentGap:(double)contentGap {
  if (_contentGap != contentGap) {
   _contentGap = contentGap;
@@ -88,6 +101,14 @@
   [self setNeedsLayout];
  }
 }
+-(void)addCoordinatedMarqueeView:(MPUMarqueeView *)view {
+ if (_primaryMarqueeView) {
+  [self->_primaryMarqueeView addCoordinatedMarqueeView:_primaryMarqueeView];
+ } else {
+  view->_primaryMarqueeView = self;
+  [self->_coordinatedMarqueeViews addPointer:(__bridge void * _Nullable)(_primaryMarqueeView)];
+ }
+}
 -(id)coordinatedMarqueeViews {
  [_coordinatedMarqueeViews compact];
  return [_coordinatedMarqueeViews allObjects];
@@ -99,6 +120,20 @@
 -(void)_tearDownMarqueeAnimation {
  [[self->_contentView layer]removeAnimationForKey:@"_MPUMarqueeViewLayerAnimationKey"];
 }
+-(void)sceneDidEnterBackgroundNotification:(id)scene {
+ id sceneObj = [scene object];
+ id windowScene = [[self window]windowScene];
+ if (sceneObj == windowScene) {
+   [self setMarqueeEnabled:NO];
+ }
+}
+-(void)sceneWillEnterForegroundNotification:(id)scene {
+ id sceneObj = [scene object];
+ id windowScene = [[self window]windowScene];
+ if (sceneObj == windowScene) {
+   [self setMarqueeEnabled:YES];
+ }
+}
 @end
 
 /*
@@ -106,14 +141,12 @@
  * layoutSubviews
  * setBounds
  * setFrame
- * animationDidStop:finished:
  * setContentSize:
  * setMarqueeEnabled:withOptions:
- * addCoordinatedMarqueeView:
  * _applyMarqueeFade
  * _createMarqueeAnimationIfNeeded
  * _createMarqueeAnimationIfNeededWithMaximumDuration:beginTime:
  * _duration
- * sceneDidEnterBackgroundNotification
- * sceneWillEnterForegroundNotification
+ *
+ * Some methods may be inaccurate.
 */
