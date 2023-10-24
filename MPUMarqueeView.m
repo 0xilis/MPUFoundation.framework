@@ -134,6 +134,19 @@
    [self setMarqueeEnabled:YES];
  }
 }
+-(CGFloat)_duration {
+ CGFloat returnFloat = self->_marqueeScrollRate;
+ CGFloat contentSize = self->_contentSize;
+ CGFloat contentGap = self->_contentGap;
+ CGFloat marqueeDelay = 0;
+ if ((_options & 0x2) == 0) {
+  marqueeDelay = self->_marqueeDelay;
+ }
+ returnFloat = 1.0 / returnFloat;
+ returnFloat *= (contentSize + contentGap);
+ returnFloat += marqueeDelay;
+ return returnFloat;
+}
 @end
 
 /*
@@ -146,7 +159,6 @@
  * _applyMarqueeFade
  * _createMarqueeAnimationIfNeeded
  * _createMarqueeAnimationIfNeededWithMaximumDuration:beginTime:
- * _duration
  *
  * Some methods may be inaccurate.
 */
